@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   signup,
+  SIGNUP_FIELDS,
   type FieldErrors,
   type SignupInput,
   type User,
@@ -23,10 +24,11 @@ type FieldProps = {
   label: string
   type: 'text' | 'email' | 'password'
   autoComplete: string
+  required?: boolean
   error?: string
 }
 
-function Field({ id, label, type, autoComplete, error }: FieldProps) {
+function Field({ id, label, type, autoComplete, required, error }: FieldProps) {
   const errorId = `${id}-error`
   return (
     <div className="grid gap-2">
@@ -36,6 +38,7 @@ function Field({ id, label, type, autoComplete, error }: FieldProps) {
         name={id}
         type={type}
         autoComplete={autoComplete}
+        aria-required={required || undefined}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
       />
@@ -61,36 +64,69 @@ function readForm(form: HTMLFormElement): SignupInput {
   }
 }
 
+/** Moves focus to the first invalid field so screen readers announce its error. */
+function focusFirstInvalid(form: HTMLFormElement, errors: FieldErrors) {
+  const field = SIGNUP_FIELDS.find((name) => errors[name])
+  if (!field) return
+  const element = form.elements.namedItem(field)
+  if (element instanceof HTMLElement) element.focus()
+}
+
 export function SignupPage() {
   const [errors, setErrors] = useState<FieldErrors>({})
-  const [networkError, setNetworkError] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [createdUser, setCreatedUser] = useState<User | null>(null)
+  // State updates are async, so a ref blocks a second submit in the same tick.
+  const inFlight = useRef(false)
+  const successTitle = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => {
+    if (createdUser) successTitle.current?.focus()
+  }, [createdUser])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setNetworkError(false)
+    if (inFlight.current) return
+    const form = event.currentTarget
+    setFormError(null)
 
-    const input = readForm(event.currentTarget)
+    const input = readForm(form)
     const clientErrors = validateSignup(input)
     setErrors(clientErrors)
-    if (Object.keys(clientErrors).length > 0) return
+    if (Object.keys(clientErrors).length > 0) {
+      focusFirstInvalid(form, clientErrors)
+      return
+    }
 
+    inFlight.current = true
     setSubmitting(true)
-    const result = await signup(input)
-    setSubmitting(false)
-
-    if (result.status === 'ok') setCreatedUser(result.user)
-    else if (result.status === 'validation') setErrors(result.errors)
-    else setNetworkError(true)
+    try {
+      const result = await signup(input)
+      if (result.status === 'ok') {
+        setCreatedUser(result.user)
+      } else if (result.status === 'validation') {
+        setErrors(result.errors)
+        focusFirstInvalid(form, result.errors)
+      } else {
+        setFormError(result.message)
+      }
+    } finally {
+      inFlight.current = false
+      setSubmitting(false)
+    }
   }
 
   if (createdUser) {
     return (
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>¡Cuenta creada!</CardTitle>
-          <CardDescription role="status">
+          <CardTitle>
+            <h1 ref={successTitle} tabIndex={-1} className="outline-none">
+              ¡Cuenta creada!
+            </h1>
+          </CardTitle>
+          <CardDescription>
             Tu usuario <strong>{createdUser.email}</strong> se creó
             correctamente.
           </CardDescription>
@@ -102,7 +138,9 @@ export function SignupPage() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle>Crear cuenta</CardTitle>
+        <CardTitle>
+          <h1>Crear cuenta</h1>
+        </CardTitle>
         <CardDescription>Regístrate con tu correo y una clave.</CardDescription>
       </CardHeader>
       <form noValidate onSubmit={handleSubmit}>
@@ -119,6 +157,7 @@ export function SignupPage() {
             label="Correo"
             type="email"
             autoComplete="email"
+            required
             error={errors.email}
           />
           <Field
@@ -126,6 +165,7 @@ export function SignupPage() {
             label="Clave"
             type="password"
             autoComplete="new-password"
+            required
             error={errors.password}
           />
           <Field
@@ -133,14 +173,12 @@ export function SignupPage() {
             label="Confirmar clave"
             type="password"
             autoComplete="new-password"
+            required
             error={errors.passwordConfirmation}
           />
-          {networkError && (
-            <p role="alert" className="text-sm text-destructive">
-              No pudimos conectar con el servidor. Inténtalo de nuevo en unos
-              minutos.
-            </p>
-          )}
+          <p role="alert" className="text-sm text-destructive empty:hidden">
+            {formError}
+          </p>
         </CardContent>
         <CardFooter className="mt-4">
           <Button type="submit" className="w-full" disabled={submitting}>
