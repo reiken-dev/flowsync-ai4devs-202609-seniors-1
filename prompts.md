@@ -16,20 +16,56 @@ distinto, y sin este archivo no se distinguen.
 - Incluye también los que **no funcionaron**. Suelen ser los más útiles de leer.
 - `Modelo` y `Herramienta` en todos. Si cambiaste de una a otra a mitad, se nota aquí.
 
-Borra el ejemplo de abajo cuando escribas el primero.
-
 ---
 
 ## Prompt 1
 
-**Modelo:** Opus 1M xHigh
+**Modelo:** Opus 5.5
 **Herramienta:** Claude Code
 
 ```
-Este es el ejemplo. Bórralo.
-
-El prompt va aquí dentro, entero y con sus saltos de línea,
-para que se sepa dónde empieza y dónde acaba.
+analiza y generame esta información: necesito saber el status actual del proyecto 1- que funcionalidades ya estan construidas 2- cual es y como esta compuesto el modelo de datos. dame explicaciones precisas de cada punto.
 ```
 
-**Qué salió:** (opcional, una línea) funcionó a la primera / tuve que insistir / me inventó una ruta que no existe.
+**Qué salió:** respondió en formato de capacidades; el resumen del tramo 1 tuve que recortarlo (sobraban detalles de pantalla y nombres de tablas).
+
+## Prompt 2
+
+**Modelo:** Opus 5.5
+**Herramienta:** Claude Code
+
+```
+Quiero definir el alcance del MVP de FlowSync. Parto de este párrafo:
+
+"Quiero que FlowSync sea una herramienta para que los equipos remotos sepan en qué está trabajando cada uno sin tener que hacer reuniones de sincronización. Algo tipo tareas compartidas pero más en tiempo real y menos rollo que Jira."
+
+Antes de proponer nada, hazme las 5 preguntas que más reducirían la incertidumbre sobre el problema, los usuarios y el alcance. Una sola ronda: después no hagas más preguntas.
+
+No propongas alcance todavía. No hables de modelo de datos, endpoints ni arquitectura: esto es un documento de producto.
+
+Las respuestas te las doy en el siguiente mensaje.
+```
+
+**Qué salió:** devolvió las 5 preguntas sin proponer alcance. Borrador propio refinado con ayuda antes de lanzarlo.
+
+## Prompt 3
+
+**Modelo:** Opus 5.5
+**Herramienta:** Claude Code
+
+```
+------ 
+```
+
+**Qué salió:** no respondió pregunta a pregunta; fue directo a 6 supuestos y 2 incoherencias. Uno de los supuestos ("cada equipo tiene su propia instalación") metía una decisión de despliegue; lo reformulé en términos de producto.
+
+## Prompt 4
+
+**Modelo:** Opus 5.5
+**Herramienta:** Claude Code
+
+```
+propon el alcance en 5 bloques: Problema - Usuarios - propuesta de valor - alcance - No alcance. Propon siendo agresiva recortando y justifica cada exclusión.
+```
+
+**Qué salió:** escribió los cinco bloques directamente en el fichero. Propuso 7 cosas dentro y 17 exclusiones, cada una justificada con la hipótesis que no valida, y señaló sus propios puntos débiles. Sin pedírselo, también infló el tramo 1 con una lista larga de detalles de pantalla; la quité.
