@@ -85,7 +85,7 @@ Cada exclusión dice qué hipótesis no ayuda a validar. Las hipótesis del MVP 
 
 ## Parte B: las tres líneas
 
-1. **Los dos números:** la IA propuso 7 dentro del alcance; quedaron 4.
+1. **Los dos números:** la IA propuso 7 dentro del alcance; quedaron 5.
 2. **Tres cosas que dejé fuera, y por qué:**
    - **Fecha de vencimiento:** no ayuda a validar H2, porque saber quién está en qué y qué está libre no depende de cuándo vence nada, y además le añade un campo a crear tarea, en contra de H1.
    - **Filtro por estado:** no ayuda a validar H2, porque con 6 personas la lista entera cabe a la vista y lo libre se distingue sin filtrar; el filtro no cambia ninguna decisión.
