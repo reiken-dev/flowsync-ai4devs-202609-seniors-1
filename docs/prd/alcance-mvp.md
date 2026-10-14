@@ -52,20 +52,20 @@ FlowSync es la respuesta siempre disponible a una pregunta concreta: *¿en qué 
 
 Una sola vertical, terminada de punta a punta: **la lista compartida de tareas**. Prevalece una vertical fina y usable sobre tres a medias.
 
-1. **Una lista única compartida.** Quien se registra queda dentro y ve las tareas de todos, con título, responsable y estado de cada una.
-2. **Crear una tarea con solo el título.** La tarea nace asignada a quien la crea y en estado pendiente.
+1. **Una lista única compartida.** Quien se registra queda dentro y ve las tareas de todos, con título, responsable, estado y fecha de vencimiento (si la tiene) de cada una.
+2. **Crear una tarea con solo el título.** La tarea nace asignada a quien la crea y en estado pendiente. La fecha de vencimiento no es obligatoria al crearla.
 3. **Tres estados fijos y no configurables:** pendiente, en curso y hecho.
 4. **Cambiar el estado desde la propia lista, en dos clics.**
 5. **Reasignar el responsable.** Es la forma de coger una tarea pendiente de otra persona, y la que hace cumplir «elegir lo siguiente sabiendo qué está libre».
 6. **Filtrar la lista por estado**, para centrarse en lo pendiente y sacar de la vista lo hecho.
+7. **Fecha de vencimiento opcional.** Una tarea puede tener fecha, y sirve para ver de un vistazo qué se ha pasado de plazo. Una tarea sin fecha nunca aparece como vencida. Entra en el MVP por decisión explícita del producto, aunque no sirve a las dos decisiones centrales (ver riesgos).
 
 **Condición transversal:** el trabajo llega con pruebas automáticas.
 
 ## 5. NO-alcance (OUT) y por qué
 
-### Recortes sobre lo planteado inicialmente
+### Recorte sobre lo planteado inicialmente
 
-- **Fecha de vencimiento.** Sirve a planificar, que es lo que se renuncia a hacer, y no sirve a ninguna de las dos decisiones centrales. Es lo primero que se descarta.
 - **Actualización en vivo, sin refrescar.** La frescura del MVP es *al abrir o volver a la lista*. Cubre el caso principal («llego por la mañana y veo qué se ha movido»), y la actualización en vivo cuesta mucho para lo que valida. Queda como supuesto a validar, no como promesa.
 
 ### Recortes de producto
@@ -85,5 +85,6 @@ Una sola vertical, terminada de punta a punta: **la lista compartida de tareas**
 
 - **Información vieja (riesgo #1).** Si el estado se queda sin actualizar, el producto pierde su sentido. La mitigación es que actualizar cueste dos clics, no obligar a nadie. Es lo primero a validar.
 - **Espacio único con registro abierto.** Cualquiera que se registre ve y edita todo. Es aceptable para el caso de estudio y no para uso real.
+- **La fecha de vencimiento es el elemento más débil del alcance.** Sirve a planificar, que es lo que el producto renuncia a hacer, y no sirve a ninguna de las dos decisiones centrales. Se mantiene por decisión explícita; si el tiempo aprieta, es lo primero que se recorta.
 - **«Libre» significa pendiente.** Como toda tarea tiene responsable, una tarea libre es una pendiente que nadie ha empezado.
 - **Éxito no validado.** El criterio de la semana de uso real no puede comprobarse hoy.
