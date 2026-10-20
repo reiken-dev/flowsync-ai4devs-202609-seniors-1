@@ -69,6 +69,11 @@ Las reglas son: `fullName` es obligatorio como clave pero admite `null`; `email`
 - **WHEN** se envía el registro con una `passwordConfirmation` distinta de `password`
 - **THEN** responde 422 con un error sobre el campo `passwordConfirmation` cuya regla es `sameAs`
 
+#### Scenario: Cadenas vacías
+
+- **WHEN** se envía el registro con `fullName` como cadena vacía
+- **THEN** se trata como `null` y responde 200; una cadena vacía en `email`, `password` o `passwordConfirmation` se trata como ausente y falla con la regla `required`
+
 #### Scenario: Varios campos inválidos a la vez
 
 - **WHEN** se envía el registro con más de un campo inválido
@@ -150,7 +155,7 @@ El sistema SHALL permitir cerrar sesión mediante `POST /api/v1/account/logout`,
 #### Scenario: Cierre correcto
 
 - **WHEN** se cierra sesión con un token vigente
-- **THEN** responde 200 con el mensaje "Logged out successfully" y ese token deja de ser válido
+- **THEN** responde 200 con `{ "message": "Logged out successfully" }` y ese token deja de ser válido
 
 #### Scenario: Otras sesiones siguen activas
 
@@ -183,7 +188,7 @@ El sistema SHALL exigir autenticación en todas las rutas de cuenta (`/api/v1/ac
 
 ### Requirement: Formato de las respuestas
 
-El sistema SHALL responder siempre en JSON, aunque la petición no lo pida, y SHALL envolver las respuestas correctas de cuentas y acceso en una clave `data`. Los errores de validación SHALL llegar como una lista `errors`.
+El sistema SHALL responder siempre en JSON, aunque la petición no lo pida, y SHALL envolver en una clave `data` las respuestas de registro, inicio de sesión y perfil. El cierre de sesión responde sin esa envoltura. Los errores de validación SHALL llegar como una lista `errors`.
 
 #### Scenario: Petición sin cabecera Accept
 
@@ -192,12 +197,17 @@ El sistema SHALL responder siempre en JSON, aunque la petición no lo pida, y SH
 
 #### Scenario: Respuesta correcta
 
-- **WHEN** una operación de cuentas y acceso termina con éxito y devuelve datos
+- **WHEN** el registro, el inicio de sesión o la consulta del perfil terminan con éxito
 - **THEN** los datos viajan dentro de `data`
+
+#### Scenario: Respuesta del cierre de sesión
+
+- **WHEN** el cierre de sesión termina con éxito
+- **THEN** la respuesta es `{ "message": "Logged out successfully" }`, sin clave `data`
 
 ### Requirement: Datos públicos y iniciales del usuario
 
-El sistema SHALL exponer de un usuario únicamente `id`, `fullName`, `email`, `createdAt`, `updatedAt` e `initials`, y SHALL calcular `initials` a partir del nombre o, si no hay nombre, del email.
+El sistema SHALL exponer de un usuario únicamente `id`, `fullName`, `email`, `createdAt`, `updatedAt` e `initials`, y SHALL calcular `initials` a partir del nombre o, si no hay nombre, del email. Si hay dos partes (dos palabras del nombre, o parte local y dominio del email), `initials` son sus dos primeras letras iniciales en mayúsculas; si solo hay una, son sus dos primeras letras en mayúsculas.
 
 #### Scenario: Nombre con dos o más palabras
 
@@ -209,10 +219,15 @@ El sistema SHALL exponer de un usuario únicamente `id`, `fullName`, `email`, `c
 - **WHEN** el usuario tiene `fullName` "Ada"
 - **THEN** `initials` es "AD", las dos primeras letras en mayúsculas
 
+#### Scenario: Nombre con más de dos palabras
+
+- **WHEN** el usuario tiene `fullName` "Ada King Lovelace"
+- **THEN** `initials` es "AK", a partir de las dos primeras palabras
+
 #### Scenario: Usuario sin nombre
 
 - **WHEN** el usuario tiene `fullName` a `null` y su email es "grace@example.com"
-- **THEN** `initials` es "GR", las dos primeras letras de la parte local del email en mayúsculas
+- **THEN** `initials` es "GE", la inicial de la parte local y la inicial del dominio, en mayúsculas
 
 ### Requirement: Rutas de la aplicación y redirecciones
 
@@ -298,7 +313,7 @@ La aplicación SHALL ofrecer en `/register` un formulario titulado "Crea tu cuen
 #### Scenario: Contraseñas distintas
 
 - **WHEN** la persona envía el formulario con la contraseña y su repetición distintas
-- **THEN** se muestra bajo "Repite la contraseña" el mensaje "Las contraseñas no coinciden." sin hacer ninguna petición al servidor
+- **THEN** se muestra bajo "Repite la contraseña" el mensaje "Las contraseñas no coinciden." sin hacer ninguna petición al servidor, aunque haya otros campos inválidos
 
 #### Scenario: Email ya registrado
 
@@ -346,7 +361,7 @@ Los formularios de acceso SHALL mostrar los errores en castellano, bajo el campo
 #### Scenario: Error de un campo visible
 
 - **WHEN** el servidor devuelve un fallo de validación sobre un campo del formulario
-- **THEN** el mensaje aparece bajo ese campo, el campo se marca como inválido y no se muestra aviso general
+- **THEN** el mensaje aparece bajo ese campo y el campo se marca como inválido; el aviso general solo aparece si además hay errores de campos no visibles
 
 #### Scenario: Error de un campo no visible
 
@@ -390,7 +405,7 @@ La aplicación SHALL mantener un estado de sesión con tres valores —cargando,
 #### Scenario: Servidor caído al restaurar
 
 - **WHEN** se abre la aplicación con un token guardado y el servidor no responde o falla con un error distinto de 401
-- **THEN** la sesión es anónima, el token guardado se conserva para el siguiente intento y en `/login` se muestra el motivo del fallo
+- **THEN** la sesión es anónima, el token guardado se conserva y una recarga vuelve a intentar restaurarla, y en `/login` se muestra el aviso del fallo ("No se pudo conectar con el servidor. Comprueba que el backend está arrancado." si no hay respuesta, "Algo ha ido mal en el servidor. Inténtalo de nuevo en un momento." si hay error del servidor)
 
 #### Scenario: El aviso de sesión perdida
 
@@ -438,11 +453,6 @@ La aplicación SHALL cerrar la sesión local siempre que la persona lo pida, aun
 
 - **WHEN** la persona pulsa "Cerrar sesión"
 - **THEN** el token guardado se borra, el estado pasa a anónimo, el servidor invalida el token y se la lleva a `/login`
-
-#### Scenario: Envío en curso
-
-- **WHEN** la persona acaba de pulsar "Cerrar sesión"
-- **THEN** el botón queda deshabilitado y muestra "Cerrando sesión…"
 
 #### Scenario: Fallo del servidor al cerrar
 
